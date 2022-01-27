@@ -1,133 +1,89 @@
-function renderNextPage(nextPage) {
-    const body = document.getElementsByTagName("body")[0];
-    body.innerHTML = PAGES[nextPage];
-    if (nextPage == "endingPage") {
-        sendResults(RESULTS);
-    }
-}
+function renderInstructions() {
+    const instructions = `
+      
+        <p>
+        In the next page, you will see a blue square and a button. For the next 5 minutes, you will click on the button whenever the square changes its color to red.
+        If you click the button promptly after a color change from blue to red, your reaction time will be displayed on the page. Nothing will appear if you missed
+        a color change. 
+        </p>
 
-function saveResultAndNext(incrementQuestion, dataType) {
-    const radioOptions = document.getElementsByClassName("form-check-input");
-
-    let checkedOption;
-    for (let i = 0; i < radioOptions.length; i++) {
-        if (radioOptions[i].checked == true) {
-            checkedOption = radioOptions[i].value;
-        }
-    }
-    if (!RESULTS[QUESTION_NUMBER]) {
-        RESULTS[QUESTION_NUMBER] = {};
-    }
-
-    if (dataType == "difficulty") {
-        RESULTS[QUESTION_NUMBER].difficulty = checkedOption;
-        RESULTS[QUESTION_NUMBER].reward = REWARDS[checkedOption];
-        if (checkedOption == "hard") {
-            REWARDS["easy"] += UPDATE_AMOUNT[QUESTION_NUMBER];
-        } else {
-            REWARDS["easy"] -= UPDATE_AMOUNT[QUESTION_NUMBER];
-        }
-        renderQuestion(checkedOption);
-    } else if (dataType == "correctness") {
-        RESULTS[QUESTION_NUMBER].correctness = isCorrect(checkedOption);
-        if (isCorrect(checkedOption)) {
-            RESULTS["totalRewards"] += RESULTS[QUESTION_NUMBER].reward;
-        };
-        if (QUESTION_NUMBER == UPDATE_AMOUNT.length) {
-            return renderNextPage("endingPage");
-        }
-        renderOptionsPage();
-    }
-    QUESTION_NUMBER += incrementQuestion;
-    if (!isProduction) {
-        console.log(RESULTS);
-    }
-}
-
-function renderOptionsPage() {
-    const body = document.getElementsByTagName("body")[0];
-    body.innerHTML = `
-    <form class="needs-validation" nonvalidate>
-            <div class="form-check mb-5">
-                <input class="form-check-input" type="radio" name="flexRadioDefault" value="easy" id="easy" onclick="activateNext();"
-                    required>
-                <label class="form-check-label" for="easy">
-                    Easy task for ${REWARDS["easy"]} tickets
-                </label>
-            </div>
-            <div class="form-check mb-5">
-                <input class="form-check-input" type="radio" name="flexRadioDefault" value="hard" id="hard" onclick="activateNext();"
-                    required>
-                <label class="form-check-label" for="hard">
-                    Hard task for ${REWARDS["hard"]} tickets
-                </label>
-            </div>
-            <button type="button" class="btn btn-primary form-control" onclick="saveResultAndNext(0, 'difficulty')" disabled>Next</button>
-        </form>
+        <p>
+        Please continue when you are ready to begin.
+        </p>
+    `;
+    BODY.innerHTML = `
+        <p class="h3">
+        ${instructions}
+        </p>
+        <button class="btn btn-primary" onclick="startTest();">
+            End instructions
+        </button>
     `;
 }
 
-function isCorrect(check) {
-    check = check.split(",");
-    let curr;
-    let prev = check[0];
-    for (let i = 1; i < check.length; i++) {
-        curr = check[i];
-        if (parseInt(curr) < parseInt(prev)) {
-            return false;
+let startTime = 0;
+function startTest() {
+    BODY.innerHTML = `
+        <div class="container d-flex flex-column justify-content-center">
+        <div class="container d-flex flex-column justify-content-center align-items-center">
+        <p id="reaction-time"></p>
+           <div class="align-self-center" id="square"></div>
+        </div>
+        <button id="btn" class="btn btn-primary" onClick="checkIfMatched(performance.now());">click this button</button>
+        </div>
+    `;
+    const square = document.getElementById("square");
+    const btn = document.getElementById("btn");
+    const timeout = 1000 * 60 * 5;
+    setTimeout(() => {
+        // console.log("===times up===");
+        // console.log(RESULTS);
+        btn.onclick = () => { renderEndingPage(); };
+        return clearInterval(test);
+    }, timeout);
+
+    const max = 5;
+    const min = 2;
+    let cue = 1;
+    let randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
+    const test = setInterval(() => {
+        if (randomInterval == cue) {
+            startTime = performance.now();
+            // console.log("matched!", randomInterval);
+            square.style.backgroundColor = "red";
+            cue = 1;
+            setTimeout(() => {
+                square.style.backgroundColor = "blue"
+            }, 75);
+            randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
+        } else {
+            square.style.backgroundColor = "blue";
+            // console.log("cue: ", cue, "\nrand==", randomInterval);
+            cue++
         }
-        prev = curr;
+    }, 1000);
+}
+
+function checkIfMatched(endTime) {
+    const reactTime = document.getElementById("reaction-time");
+    const diff = endTime - startTime;
+    if (diff > 1000) {
+        RESULTS.totalMiss++
+    } else {
+        RESULTS.reactionTimes.push(diff)
+        RESULTS.totalHit++
+        reactTime.innerText = `${diff} ms`;
+        setTimeout(() => {
+            reactTime.innerText = ``;
+        }, 500);
     }
-    return true;
 }
 
-function activateNext() {
-    const btn = document.getElementsByClassName("btn")[0];
-    btn.disabled = false;
-}
 
-function renderQuestion(difficulty) {
-    const body = document.getElementsByTagName("body")[0];
-    const questionType = { "easy": EASY_QUESTIONS, "hard": HARD_QUESTIONS }
-    let questionHTML;
-    let question;
-
-    question = questionType[difficulty][Math.floor(Math.random() * questionType[difficulty].length)];
-    // question = [[5, 8, 10, 11], [5, 8, 10, 9], [8, 9, 6, 5], [4, 6, 5, 8]]
-    let currentIndex = question.length;
-    let randomIndex;
-
-    // While there remain elements to shuffle...
-    while (currentIndex != 0) {
-
-        // Pick a remaining element...
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-
-        // And swap it with the current element.
-        [question[currentIndex], question[randomIndex]] = [
-            question[randomIndex], question[currentIndex]];
-    }
-    questionHTML = question.map(el => {
-
-        return `
-        <div class="form-check mb-3">
-                <input class="form-check-input" type="radio" name="flexRadioDefault" value="${el}" id="${el}" onclick="activateNext();"
-                    required>
-                <label class="form-check-label" for="${el}">
-                    ${el.join(", ")}
-                </label >
-            </div >
-            `;
-    })
-    body.innerHTML = `<form class="needs-validation" nonvalidate> <p class="h3 mb-3">Select the option that displays the numbers in order from least to greatest.</p>` +
-        questionHTML.join(" ") +
-        `<button type="button" class="btn btn-primary form-control" onclick="saveResultAndNext(1, 'correctness')" disabled>Next</button></form>`;
-}
 
 // how to save final result, I think:
 async function sendResults(results) {
-    if (isProduction) {
+    if (IS_PRODUCTION) {
         function handleErrors(response) {
             if (!response.ok) {
                 throw Error(response.statusText);
@@ -149,3 +105,12 @@ async function sendResults(results) {
 
 }
 
+
+function renderEndingPage() {
+    sendResults(RESULTS);
+    BODY.innerHTML = `
+            < p class="h3" >
+                Task over.Thank you for participating in this study.You can close this window.
+        </p >
+            `;
+}

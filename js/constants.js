@@ -1,6 +1,4 @@
-const UPDATE_AMOUNT = [50, 25, 13, 6, 3, 2, 1];
-// const UPDATE_AMOUNT = [50, 25];
-const REWARDS = { easy: 100, hard: 200 }
-const RESULTS = { totalRewards: 0 }
-const isProduction = true;
+const RESULTS = { totalHit: 0, totalMiss: 0, reactionTimes: [] }
+const IS_PRODUCTION = true;
+const BODY = document.getElementsByTagName("body")[0];
 let QUESTION_NUMBER = 0;
