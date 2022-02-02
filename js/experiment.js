@@ -34,27 +34,25 @@ function startTest() {
     `;
     const square = document.getElementById("square");
     const btn = document.getElementById("btn");
-    const timeout = 1000 * 60 * 5;
     setTimeout(() => {
         // console.log("===times up===");
         // console.log(RESULTS);
-        btn.onclick = () => { renderEndingPage(); };
+        renderEndingPage();
         return clearInterval(test);
     }, timeout);
-
-    const max = 5;
-    const min = 2;
     let cue = 1;
+    RESULTS[`${0}`] = { "clickedAfter": [] };
     let randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
     const test = setInterval(() => {
         if (randomInterval == cue) {
-            startTime = performance.now();
+            startTime = Math.round(performance.now());
+            RESULTS[`${startTime}`] = { "clickedAfter": [] };
             // console.log("matched!", randomInterval);
             square.style.backgroundColor = "red";
             cue = 1;
             setTimeout(() => {
                 square.style.backgroundColor = "blue"
-            }, 75);
+            }, 500);
             randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
         } else {
             square.style.backgroundColor = "blue";
@@ -66,17 +64,18 @@ function startTest() {
 
 function checkIfMatched(endTime) {
     const reactTime = document.getElementById("reaction-time");
-    const diff = endTime - startTime;
+    const diff = Math.round(endTime - startTime);
+    RESULTS[`${startTime}`]["clickedAfter"].push(diff);
     if (diff > 1000) {
-        RESULTS.totalMiss++
+
     } else {
-        RESULTS.reactionTimes.push(diff)
-        RESULTS.totalHit++
         reactTime.innerText = `${diff} ms`;
         setTimeout(() => {
             reactTime.innerText = ``;
         }, 500);
     }
+    console.log(RESULTS);
+
 }
 
 
@@ -109,8 +108,8 @@ async function sendResults(results) {
 function renderEndingPage() {
     sendResults(RESULTS);
     BODY.innerHTML = `
-            < p class="h3" >
-                Task over.Thank you for participating in this study.You can close this window.
-        </p >
+            <p class="h3">
+                Task over. Thank you for participating in this study. You can close this window.
+            </p >
             `;
 }
