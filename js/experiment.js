@@ -1,13 +1,19 @@
 function renderInstructions() {
     const instructions = `
       
-        <p>
+        <p class="h3">
         In the next page, you will see a blue square and a button. For the next 5 minutes, you will click on the button whenever the square changes its color to red.
-        If you click the button promptly after a color change from blue to red, your reaction time will be displayed on the page. Nothing will appear if you missed
-        a color change. 
         </p>
 
-        <p>
+        <p class="h3">
+        If you click the button promptly after a color change from blue to red, your reaction time will be displayed on the page.
+        </p>
+
+        <p class="h3">
+        Nothing will appear if you missed a color change. 
+        </p>
+
+        <p class="h3">
         Please continue when you are ready to begin.
         </p>
     `;
@@ -24,13 +30,13 @@ function renderInstructions() {
 let startTime = 0;
 function startTest() {
     BODY.innerHTML = `
-        <div class="container d-flex flex-column justify-content-center">
+
         <div class="container d-flex flex-column justify-content-center align-items-center">
         <p id="reaction-time"></p>
            <div class="align-self-center" id="square"></div>
         </div>
         <button id="btn" class="btn btn-primary" onClick="checkIfMatched(performance.now());">click this button</button>
-        </div>
+
     `;
     const square = document.getElementById("square");
     const btn = document.getElementById("btn");
