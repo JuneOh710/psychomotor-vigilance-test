@@ -14,6 +14,10 @@ function renderInstructions() {
         </p>
 
         <p class="h3">
+        There will be a practice trial that runs for <b>30 seconds</b> before the real trial begins.
+        </p>
+
+        <p class="h3">
         Please continue when you are ready to begin.
         </p>
     `;
@@ -21,14 +25,86 @@ function renderInstructions() {
         <p class="h3">
         ${instructions}
         </p>
-        <button class="btn btn-primary" onclick="startTest();">
-            End instructions
+        <button class="btn btn-primary" onclick="startTrial();">
+            Start practice trial.
         </button>
     `;
 }
 
 let startTime = 0;
+function startTrial() {
+    startTime = 0;
+    BODY.innerHTML = `
+
+    <div class="container d-flex flex-column justify-content-center align-items-center">
+    <p id="reaction-time"></p>
+       <div class="align-self-center" id="square"></div>
+    </div>
+    <button id="btn" class="btn btn-primary" onClick="checkIfMatchedTrial(performance.now());">click this button</button>
+
+`;
+    const square = document.getElementById("square");
+    setTimeout(() => {
+        BODY.innerHTML = `
+        <p class="h3">
+        Do you understand how it works? If not please try again. Otherwise please continue.
+        </p>
+        <p class="h3">
+        Note that in the real test, you will see your reaction time instead of "Good!" and "Too slow".
+        </p>
+        <div>
+        <button class="btn btn-primary me-3" onclick="startTest();">
+        Start test
+    </button>
+    <button class="btn btn-primary" onclick="startTrial();">
+        Practice again
+    </button>
+    </div>
+    `;
+        return clearInterval(test);
+    }, 5000);
+    let cue = 1;
+    let randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
+    const test = setInterval(() => {
+        if (randomInterval == cue) {
+            startTime = Math.round(performance.now());
+            square.style.backgroundColor = "red";
+            cue = 1;
+            setTimeout(() => {
+                square.style.backgroundColor = "blue"
+            }, 500);
+            randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
+        } else {
+            square.style.backgroundColor = "blue";
+            cue++
+        }
+    }, 1000);
+}
+
+function checkIfMatchedTrial(endTime) {
+    const reactTime = document.getElementById("reaction-time");
+    const diff = Math.round(endTime - startTime);
+    if (diff > 800) {
+        reactTime.innerHTML = `
+        <span class="h3" style="color:red">Too slow</span>
+        `;
+        setTimeout(() => {
+            reactTime.innerHTML = ``;
+        }, 500);
+    } else {
+        reactTime.innerHTML = `
+        <span class="h3" style="color:green">Good!</span>
+        `;
+        setTimeout(() => {
+            reactTime.innerHTML = ``;
+        }, 500);
+    }
+
+}
+
+
 function startTest() {
+    startTime = 0;
     BODY.innerHTML = `
 
         <div class="container d-flex flex-column justify-content-center align-items-center">
@@ -39,13 +115,10 @@ function startTest() {
 
     `;
     const square = document.getElementById("square");
-    const btn = document.getElementById("btn");
     setTimeout(() => {
-        // console.log("===times up===");
-        // console.log(RESULTS);
         renderEndingPage();
         return clearInterval(test);
-    }, timeout);
+    }, TIMEOUT);
     let cue = 1;
     RESULTS[`${0}`] = { "clickedAfter": [] };
     let randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
@@ -53,7 +126,6 @@ function startTest() {
         if (randomInterval == cue) {
             startTime = Math.round(performance.now());
             RESULTS[`${startTime}`] = { "clickedAfter": [] };
-            // console.log("matched!", randomInterval);
             square.style.backgroundColor = "red";
             cue = 1;
             setTimeout(() => {
@@ -62,11 +134,11 @@ function startTest() {
             randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
         } else {
             square.style.backgroundColor = "blue";
-            // console.log("cue: ", cue, "\nrand==", randomInterval);
             cue++
         }
     }, 1000);
 }
+
 
 function checkIfMatched(endTime) {
     const reactTime = document.getElementById("reaction-time");
@@ -80,9 +152,9 @@ function checkIfMatched(endTime) {
             reactTime.innerText = ``;
         }, 500);
     }
-    console.log(RESULTS);
 
 }
+
 
 
 
