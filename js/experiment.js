@@ -62,7 +62,7 @@ function startTrial() {
     </div>
     `;
         return clearInterval(test);
-    }, 5000);
+    }, PRACTICE_TIMEOUT);
     let cue = 1;
     let randomInterval = Math.floor(Math.random() * (max - min + 1) + min);
     const test = setInterval(() => {

@@ -1,4 +1,3 @@
-// const RESULTS = { totalHit: 0, totalMiss: 0, falseAlarm: 0, reactionTimes: [] }
 const RESULTS = {}
 const IS_PRODUCTION = true;
 const BODY = document.getElementsByTagName("body")[0];
